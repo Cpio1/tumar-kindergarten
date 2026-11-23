@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* Только светлая тема: вариант `dark:` не срабатывает никогда */
+@custom-variant dark (&:where(.never-dark, .never-dark *));
+
+@theme {
+  --font-sans: var(--font-nunito), "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-comfortaa), var(--font-nunito), "Segoe UI", system-ui, sans-serif;
+
+  /* Палитра «Тұмар» */
+  --color-teal: #6fd3c9;
+  --color-teal-soft: #e4f7f4;
+  --color-teal-mist: #f1fbf9;
+  --color-teal-deep: #0f7368;
+
+  --color-sun: #ffd65c;
+  --color-sun-soft: #fff5cf;
+  --color-sun-deep: #855c00;
+
+  --color-peach: #ffbc9a;
+  --color-peach-soft: #fff0e8;
+  --color-peach-deep: #b24a22;
+
+  --color-lavender: #c9b8f4;
+  --color-lavender-soft: #f3eefe;
+  --color-lavender-deep: #5f45b5;
+
+  --color-milk: #fffbf4;
+  --color-cream: #fff6e9;
+  --color-ink: #24324a;
+  --color-ink-soft: #55617a;
+  --color-line: #efe5d6;
+  --color-wa: #15803d;
+  --color-wa-hover: #116c33;
+
+  --shadow-soft: 0 1px 2px rgb(36 50 74 / 0.05), 0 10px 28px -12px rgb(36 50 74 / 0.18);
+  --shadow-lift: 0 2px 6px rgb(36 50 74 / 0.06), 0 22px 40px -18px rgb(36 50 74 / 0.28);
+
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-drift: drift 22s ease-in-out infinite alternate;
+  --animate-twinkle: twinkle 3.6s ease-in-out infinite;
+  --animate-spin-slow: spin 50s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes drift {
+  from { transform: translateX(-8px); }
+  to { transform: translateX(12px); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.82); }
+}
+
+:root {
+  color-scheme: only light;
+  --header-h: 64px;
+  --gutter: 16px;
+}
+@media (min-width: 640px) {
+  :root { --gutter: 24px; }
+}
+@media (min-width: 1024px) {
+  :root { --header-h: 72px; --gutter: 32px; }
+}
+
+html {
+  color-scheme: only light;
+  background: var(--color-milk);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: clip;
+  /* якоря не прячутся под фиксированной шапкой */
+  scroll-padding-top: var(--header-h);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: clip;
+  background: var(--color-milk);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Принудительно светлые цвета форм в браузерах с тёмной системной темой */
+input, textarea, select, button { color-scheme: only light; }
+
+::selection { background: var(--color-sun); color: var(--color-ink); }
+
+:focus-visible {
+  outline: 3px solid var(--color-teal-deep);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+@layer components {
+  .container-x {
+    width: 100%;
+    max-width: 1180px;
+    margin-inline: auto;
+    padding-inline: max(var(--gutter), env(safe-area-inset-left));
+  }
+
+  /* Раздел: заголовок раздела всегда виден целиком под шапкой */
+  .section {
+    position: relative;
+    isolation: isolate;
+    scroll-margin-top: var(--header-h);
+    padding-block: 56px;
+  }
+  @media (min-width: 1024px) {
+    .section {
+      /* На компьютере раздел старается уместиться в видимую область экрана */
+      padding-block: clamp(36px, 5.5svh, 64px);
+    }
+  }
+
+  .font-display { font-family: var(--font-display); }
+
+  .h-section {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    font-size: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+  }
+
+  .decor {
+    position: absolute;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0.7rem 1.35rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 1rem;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .btn:active { transform: translateY(1px) scale(0.99); }
+  @media (hover: hover) {
+    .btn:hover { transform: translateY(-2px); }
+  }
+  .btn-wa { background: var(--color-wa); color: #fff; box-shadow: 0 10px 22px -10px rgb(21 128 61 / 0.6); }
+  .btn-wa:hover { background: var(--color-wa-hover); }
+  .btn-ink { background: var(--color-ink); color: #fff; }
+  .btn-light { background: #fff; color: var(--color-ink); box-shadow: var(--shadow-soft); border: 1.5px solid var(--color-line); }
+  .btn-sun { background: var(--color-sun); color: var(--color-ink); box-shadow: 0 10px 22px -12px rgb(133 92 0 / 0.55); }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-weight: 800;
+    font-size: 0.875rem;
+    line-height: 1.25;
+  }
+
+  /* Органичные формы карточек — не только прямоугольники */
+  .shape-blob { border-radius: 62% 38% 54% 46% / 48% 56% 44% 52%; }
+  .shape-blob-2 { border-radius: 42% 58% 46% 54% / 58% 42% 58% 42%; }
+  .shape-leaf { border-radius: 44px 14px 44px 14px; }
+  .shape-leaf-r { border-radius: 14px 44px 14px 44px; }
+  .shape-arch { border-radius: 999px 999px 32px 32px; }
+  .shape-cloud { border-radius: 40px 40px 40px 40px / 40px 40px 40px 40px; }
+}
+
+/* Появление элементов при прокрутке (только если работает JS; при reduced motion — без движения) */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--d, 0ms);
+}
+.js .reveal.is-in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .js .reveal { opacity: 1; transform: none; }
+}
+
+/* Высота первого экрана без «прыжков» мобильных браузеров (svh с запасным vh) */
+.hero-min-h {
+  min-height: calc(100vh - var(--header-h));
+}
+@supports (height: 100svh) {
+  .hero-min-h { min-height: calc(100svh - var(--header-h)); }
+}
