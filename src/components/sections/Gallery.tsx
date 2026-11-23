@@ -12,8 +12,10 @@ import { InstagramIcon } from "../ui/BrandIcons";
 import { SectionHeading } from "../ui/SectionHeading";
 
 /** Сколько фото показывать до кнопки «Показать ещё». */
-const INITIAL = 8;
-const tileShapes = ["rounded-[28px_28px_28px_8px]", "rounded-[28px]", "rounded-[8px_28px_28px_28px]", "rounded-[28px_8px_28px_28px]"];
+const INITIAL = 9;
+const tileShapes = ["rounded-[30px_30px_30px_10px]", "rounded-[30px]", "rounded-[10px_30px_30px_30px]", "rounded-[30px_10px_30px_30px]"];
+/** Внутренний радиус = внешний минус отступ рамки, чтобы углы были концентричными. */
+const innerShapes = ["rounded-[24px_24px_24px_6px]", "rounded-[24px]", "rounded-[6px_24px_24px_24px]", "rounded-[24px_6px_24px_24px]"];
 
 export function Gallery() {
   const t = useT();
@@ -49,32 +51,49 @@ export function Gallery() {
           <EmptyGallery />
         ) : (
           <>
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
-              {visible.map((p, i) => (
-                <li key={p.src} className="reveal" style={{ "--d": `${(i % 4) * 60}ms` } as React.CSSProperties}>
-                  <button
-                    ref={(el) => {
-                      thumbs.current[i] = el;
-                    }}
-                    type="button"
-                    onClick={() => onOpen(i)}
-                    aria-label={`${g.open}: ${g.counter(i + 1, photos.length)}`}
-                    className={`group relative block aspect-[4/3] w-full overflow-hidden bg-teal-soft shadow-soft ring-1 ring-line ${tileShapes[i % tileShapes.length]} lg:aspect-auto lg:h-[min(200px,22svh)]`}
+            {/* Masonry на CSS-колонках: каждое фото в своих пропорциях, без обрезки и растягивания */}
+            <div className="relative">
+              <Sparkle className="decor -top-5 -left-3 hidden w-7 animate-twinkle sm:block" fill="#6fd3c9" />
+              <Flower className="decor -right-3 -bottom-5 hidden w-9 sm:block" petal="#c9b8f4" />
+              <ul className="columns-1 gap-4 min-[480px]:columns-2 lg:columns-3 lg:gap-5">
+                {visible.map((p, i) => (
+                  <li
+                    key={p.src}
+                    className="reveal mb-4 break-inside-avoid lg:mb-5"
+                    style={{ "--d": `${(i % 3) * 80}ms` } as React.CSSProperties}
                   >
-                    <Image
-                      src={p.src}
-                      alt={`${g.photoAlt} — ${i + 1}`}
-                      fill
-                      sizes="(min-width: 1024px) 280px, (min-width: 640px) 33vw, 50vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <span className="absolute right-2 bottom-2 grid size-9 place-items-center rounded-full bg-white/90 text-ink opacity-0 shadow-soft transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                      <Expand className="size-4" aria-hidden />
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+                    <button
+                      ref={(el) => {
+                        thumbs.current[i] = el;
+                      }}
+                      type="button"
+                      onClick={() => onOpen(i)}
+                      aria-label={`${g.open}: ${g.counter(i + 1, photos.length)}`}
+                      className={`group relative block w-full overflow-hidden bg-white p-1.5 shadow-soft ring-1 ring-line transition-[transform,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:shadow-lift focus-visible:-translate-y-1 ${tileShapes[i % tileShapes.length]}`}
+                    >
+                      <span className={`relative block overflow-hidden bg-teal-soft ${innerShapes[i % innerShapes.length]}`}>
+                        <Image
+                          src={p.src}
+                          alt={`${g.photoAlt} — ${i + 1}`}
+                          width={p.width}
+                          height={p.height}
+                          loading={i < 3 ? "eager" : "lazy"}
+                          sizes="(min-width: 1024px) 380px, (min-width: 480px) 50vw, 100vw"
+                          className="block h-auto w-full transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.04]"
+                        />
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/25 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                        />
+                      </span>
+                      <span className="absolute right-4 bottom-4 grid size-10 translate-y-1 place-items-center rounded-full bg-white/95 text-ink opacity-0 shadow-soft transition-[opacity,transform] duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                        <Expand className="size-4" aria-hidden />
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {photos.length > INITIAL ? (
               <div className="mt-6 flex justify-center">
@@ -200,7 +219,7 @@ function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label={g.dialog}
-      className="fixed inset-0 z-[60] flex flex-col bg-[#132033]/95"
+      className="animate-fade-in fixed inset-0 z-[60] flex flex-col bg-[#132033]/95"
       style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
@@ -246,7 +265,7 @@ function Lightbox({
             alt={`${g.photoAlt} — ${index + 1}`}
             fill
             sizes="100vw"
-            className="object-contain select-none"
+            className="animate-photo-in object-contain select-none"
             draggable={false}
           />
         </div>

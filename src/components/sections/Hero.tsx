@@ -87,9 +87,13 @@ export function Hero() {
         {/* Изображение или иллюстрация */}
         <div className="reveal relative mx-auto w-full max-w-[min(100%,440px)] sm:max-w-[480px] lg:max-w-none" style={{ "--d": "200ms" } as React.CSSProperties}>
           {heroPhoto ? (
-            <div className="relative mx-auto aspect-[5/4] w-full max-h-[min(58svh,520px)] lg:aspect-[1/1] lg:max-w-[min(100%,calc(100svh-var(--header-h)-120px))]">
+            <div
+              className="relative mx-auto w-full max-w-[min(100%,calc((58svh)*var(--ar)))] lg:max-w-[min(100%,calc((100svh-var(--header-h)-140px)*var(--ar)))]"
+              style={{ aspectRatio: `${heroPhoto.width} / ${heroPhoto.height}`, "--ar": heroPhoto.width / heroPhoto.height } as React.CSSProperties}
+            >
               <div aria-hidden className="shape-blob absolute -inset-2 -rotate-3 bg-sun/70 sm:-inset-3" />
-              <div className="shape-blob-2 relative h-full w-full overflow-hidden bg-teal-soft shadow-lift ring-4 ring-white">
+              {/* Групповое фото: мягкие углы вместо «кляксы», чтобы не обрезать детей по краям */}
+              <div className="relative h-full w-full overflow-hidden rounded-[40px_40px_40px_14px] bg-teal-soft shadow-lift ring-4 ring-white sm:rounded-[56px_56px_56px_18px]">
                 <Image
                   src={heroPhoto.src}
                   alt={h.photoAlt}

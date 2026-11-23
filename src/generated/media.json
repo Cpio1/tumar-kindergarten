@@ -1,6 +1,66 @@
 {
-  "hero": null,
+  "hero": {
+    "name": "main-page.jpeg",
+    "src": "/gallery/main-page.jpeg",
+    "width": 1179,
+    "height": 980
+  },
   "logo": null,
-  "gallery": [],
+  "gallery": [
+    {
+      "name": "image1.jpeg",
+      "src": "/gallery/image1.jpeg",
+      "width": 1179,
+      "height": 909
+    },
+    {
+      "name": "image2.jpeg",
+      "src": "/gallery/image2.jpeg",
+      "width": 1165,
+      "height": 897
+    },
+    {
+      "name": "image3.jpeg",
+      "src": "/gallery/image3.jpeg",
+      "width": 1163,
+      "height": 754
+    },
+    {
+      "name": "image4.jpeg",
+      "src": "/gallery/image4.jpeg",
+      "width": 1179,
+      "height": 753
+    },
+    {
+      "name": "image5.jpeg",
+      "src": "/gallery/image5.jpeg",
+      "width": 1179,
+      "height": 914
+    },
+    {
+      "name": "image6.jpeg",
+      "src": "/gallery/image6.jpeg",
+      "width": 1158,
+      "height": 715
+    },
+    {
+      "name": "image7.jpeg",
+      "src": "/gallery/image7.jpeg",
+      "width": 1179,
+      "height": 850
+    },
+    {
+      "name": "image8.jpeg",
+      "src": "/gallery/image8.jpeg",
+      "width": 1179,
+      "height": 827
+    },
+    {
+      "name": "image9.jpeg",
+      "src": "/gallery/image9.jpeg",
+      "width": 4032,
+      "height": 3024
+    }
+  ],
   "documents": []
 }

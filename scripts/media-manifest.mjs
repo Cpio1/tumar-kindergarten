@@ -2,7 +2,8 @@
 // список файлов (с реальными размерами изображений) в src/generated/media.json.
 // Запускается автоматически перед `npm run dev` и `npm run build`.
 //
-// • Фото первого экрана: main-page.(png|jpg|jpeg|webp) — в public/ или public/hero.
+// • Фото первого экрана: main-page.(png|jpg|jpeg|webp) — в public/hero, public/ или public/gallery
+//   (в галерею оно не попадает, чтобы фото не повторялось).
 // • Галерея: любые PNG / JPG / WebP из public/gallery.
 // • Документы: PDF / изображения / DOCX из public/documents.
 // • Логотип (необязательно): public/logo.(png|webp|svg).
@@ -90,7 +91,8 @@ async function images(dir, filter = IMAGE) {
   return items.sort(byName);
 }
 
-const hero = (await images("hero", HERO))[0] ?? (await images("", HERO))[0] ?? null;
+const hero =
+  (await images("hero", HERO))[0] ?? (await images("", HERO))[0] ?? (await images("gallery", HERO))[0] ?? null;
 const gallery = (await images("gallery")).filter((p) => !HERO.test(p.name));
 const logo = (await images("", /^logo\.(png|webp)$/i))[0] ?? null;
 
