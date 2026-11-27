@@ -39,9 +39,9 @@ npm run preview                           # http://localhost:4173/tumar-landing/
 
 1. У регистратора добавьте DNS-записи для GitHub Pages (CNAME на `USERNAME.github.io` для поддомена или A-записи GitHub для корневого домена — см. документацию GitHub Pages).
 2. В **Settings → Pages → Custom domain** укажите домен и включите **Enforce HTTPS**.
-3. Запустите публикацию заново (push или Run workflow).
+3. **Обязательно запустите публикацию заново** (push или Run workflow): смена домена в настройках сама сборку не запускает, и до пересборки сайт на домене открывается без стилей и фото (ресурсы ищутся по старому пути `/REPOSITORY/_next/...`).
 
-Workflow сам получит новый адрес: `basePath` станет пустым, а canonical-ссылки, sitemap и Open Graph будут указывать на домен. Править код не нужно.
+Workflow при каждой сборке читает адрес из настроек Pages (и перепроверяет CNAME через Pages API): с доменом `basePath` пустой, без домена — `/REPOSITORY`; canonical-ссылки, sitemap и Open Graph указывают на актуальный адрес. После сборки `npm run check` проверяет, что все пути (`/_next/static/`, `/gallery/`, шрифты в CSS) существуют, а после публикации job `smoke-test` проверяет живой сайт — ресурсы должны отвечать 200. Править код не нужно.
 
 ## Как обновлять содержимое
 

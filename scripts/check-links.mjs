@@ -7,6 +7,17 @@ import path from "node:path";
 const out = path.resolve("out");
 const index = await readFile(path.join(out, "index.html"), "utf8");
 const base = index.match(/(?:src|href)="([^"]*?)\/_next\//)?.[1] ?? "";
+let errors = 0;
+let checked = 0;
+
+// В CI BASE_PATH задаётся из настроек Pages: сборка обязана использовать именно его
+if (process.env.BASE_PATH !== undefined) {
+  const expected = process.env.BASE_PATH.trim().replace(/\/+$/, "");
+  if (base !== expected) {
+    errors++;
+    console.error(`✗ basePath сборки "${base}" не совпадает с ожидаемым "${expected}"`);
+  }
+}
 
 async function* walk(dir) {
   for (const e of await readdir(dir, { withFileTypes: true })) {
@@ -17,9 +28,20 @@ async function* walk(dir) {
 }
 
 const exists = async (p) => stat(p).then((s) => (s.isDirectory() ? stat(path.join(p, "index.html")).then(() => true, () => false) : true), () => false);
-let errors = 0;
-let checked = 0;
 for await (const file of walk(out)) {
+  // CSS: шрифты и картинки в url(/...) тоже должны существовать
+  if (file.endsWith(".css")) {
+    const css = await readFile(file, "utf8");
+    for (const m of css.matchAll(/url\(\s*["']?(\/[^"')]+)["']?\s*\)/g)) {
+      checked++;
+      const clean = decodeURIComponent(m[1].split(/[?#]/)[0]);
+      if (!clean.startsWith(`${base}/`) || !(await exists(path.join(out, clean.slice(base.length))))) {
+        errors++;
+        console.error(`✗ ${path.relative(out, file)}: url(${m[1]}) — файл не найден`);
+      }
+    }
+    continue;
+  }
   if (!file.endsWith(".html")) continue;
   const html = await readFile(file, "utf8");
   const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));

@@ -20,6 +20,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      site_url: ${{ steps.site.outputs.site_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,12 +32,34 @@ jobs:
           node-version: 22
           cache: npm
 
-      # Адрес сайта берётся из настроек Pages — с учётом реального имени репозитория:
-      #   без своего домена → base_path = /<имя-репозитория>, base_url = https://<user>.github.io/<имя-репозитория>
-      #   со своим доменом  → base_path = "",                  base_url = https://tumar.edu.kz
+      # Адрес сайта берётся из настроек Pages при КАЖДОЙ сборке:
+      #   без своего домена → base_path = /tumar-kindergarten, base_url = https://cpio1.github.io/tumar-kindergarten
+      #   со своим доменом  → base_path = "",                  base_url = https://tumarkids.edu.kz
+      # Важно: смена домена в Settings → Pages сама сборку не запускает —
+      # после неё запустите workflow вручную (Actions → Deploy to GitHub Pages → Run workflow).
       - name: Configure GitHub Pages
         id: pages
         uses: actions/configure-pages@v5
+
+      # Перепроверяем домен напрямую через Pages API: если задан CNAME — сайт живёт в корне домена
+      - name: Resolve site address
+        id: site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          PAGES_BASE_URL: ${{ steps.pages.outputs.base_url }}
+        run: |
+          cname="$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.cname // ""' 2>/dev/null || true)"
+          if [ -n "$cname" ]; then
+            base_path=""
+            site_url="https://${cname}"
+          else
+            base_path="${PAGES_BASE_PATH}"
+            site_url="${PAGES_BASE_URL%/}"
+          fi
+          echo "base_path=${base_path}" >> "$GITHUB_OUTPUT"
+          echo "site_url=${site_url}" >> "$GITHUB_OUTPUT"
+          echo "::notice::Сборка для ${site_url}/ (basePath: \"${base_path}\")"
 
       - name: Install dependencies
         run: npm ci
@@ -43,9 +67,16 @@ jobs:
       - name: Build static site
         run: npm run build
         env:
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          SITE_URL: ${{ steps.pages.outputs.base_url }}
+          BASE_PATH: ${{ steps.site.outputs.base_path }}
+          SITE_URL: ${{ steps.site.outputs.site_url }}
           NEXT_TELEMETRY_DISABLED: 1
+
+      # Все ссылки на /_next/static/, /gallery/, шрифты в CSS и т. д. должны существовать в out/
+      # и использовать ожидаемый basePath
+      - name: Check built links
+        run: npm run check
+        env:
+          BASE_PATH: ${{ steps.site.outputs.base_path }}
 
       # Без .nojekyll GitHub Pages скрывает папки, начинающиеся с «_» (например, _next)
       - name: Add .nojekyll
@@ -59,6 +90,8 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -66,3 +99,29 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Проверка опубликованного сайта: главная и все ресурсы /_next/static/ и /gallery/ отвечают 200
+  smoke-test:
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check live site
+        env:
+          SITE_URL: ${{ needs.build.outputs.site_url }}
+        run: |
+          set -u
+          origin="$(echo "$SITE_URL" | grep -oE '^https?://[^/]+')"
+          for attempt in 1 2 3 4 5 6; do
+            html="$(curl -fsSL "${SITE_URL}/" || true)"
+            # ждём, пока CDN отдаст новую версию с нужными путями
+            if echo "$html" | grep -q "\"$(echo "$SITE_URL" | sed -E 's#^https?://[^/]+##')/_next/static/"; then break; fi
+            echo "Сайт ещё не обновился, ждём… ($attempt)"; sleep 20
+          done
+          paths="$(echo "$html" | grep -oE '(src|href)="/[^"]*(_next/static|gallery)/[^"]*"' | sed -E 's/^(src|href)="//; s/"$//; s/&amp;/\&/g' | sort -u)"
+          if [ -z "$paths" ]; then echo "::error::На ${SITE_URL}/ не найдено ссылок на /_next/static/ или /gallery/"; exit 1; fi
+          fail=0
+          for p in $paths; do
+            code="$(curl -s -o /dev/null -w '%{http_code}' "${origin}${p}")"
+            if [ "$code" != "200" ]; then echo "::error::${code} ${origin}${p}"; fail=1; else echo "200 ${p}"; fi
+          done
+          exit $fail
