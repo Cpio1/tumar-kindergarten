@@ -30,10 +30,20 @@ export type DocumentItem = {
   /** Подпись формата: PDF, DOCX, JPG… */
   format?: string;
   size?: number;
+  /** Иконка карточки: "folder" — папка с документами (для ссылок на облачные папки). */
+  icon?: "folder";
 };
 
 const manualDocuments: DocumentItem[] = [
   // Добавляйте документы сюда (см. пример выше).
+  {
+    id: "kindergarten-documents",
+    title: { ru: "Документы детского сада", kk: "Балабақша құжаттары" },
+    url: "https://cloud.mail.ru/public/Fy4r/U5NB7ygZJ",
+    source: "link",
+    format: "Cloud Mail.ru",
+    icon: "folder",
+  },
 ];
 
 const ext = (name: string) => (name.split(".").pop() ?? "").toUpperCase();
